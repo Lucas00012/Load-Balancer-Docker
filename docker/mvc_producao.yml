@@ -1,0 +1,74 @@
+version: "3"
+
+services:
+    mysql_mvc:
+        image: mysql:latest
+        container_name: mysql_mvc
+        ports:
+            - "3306:3306"
+        volumes:
+            - produtosdb:/var/lib/mysql 
+        environment:
+            - MYSQL_ROOT_PASSWORD=admin
+    
+    web_mvc_1:
+        image: web_mvc:latest
+        container_name: web_mvc_1
+        build:
+            context: ../
+            dockerfile: ./Dockerfile
+        networks:
+            - mvc_network
+        environment:
+            - ASPNETCORE_ENVIRONMENT=Production
+        depends_on: 
+            - mysql_mvc
+            
+    web_mvc_2:
+        image: web_mvc:latest
+        container_name: web_mvc_2
+        build:
+            context: ../
+            dockerfile: ./Dockerfile
+        networks:
+            - mvc_network
+        environment:
+            - ASPNETCORE_ENVIRONMENT=Production
+        depends_on: 
+            - mysql_mvc
+            
+    web_mvc_3:
+        image: web_mvc:latest
+        container_name: web_mvc_3
+        build:
+            context: ../
+            dockerfile: ./Dockerfile
+        networks:
+            - mvc_network
+        environment:
+            - ASPNETCORE_ENVIRONMENT=Production
+        depends_on: 
+            - mysql_mvc
+            
+    load_balancer:
+        image: haproxy:latest
+        container_name: load_balancer
+        ports:
+            - "3310:3310"
+            - "3311:80"
+        networks:
+            - mvc_network
+        volumes:
+            - ./:/usr/local/etc/haproxy
+        depends_on: 
+            - web_mvc_1
+            - web_mvc_2
+            - web_mvc_3
+            
+volumes:
+    produtosdb:
+    
+networks:
+    mvc_network:
+        driver: bridge
+        
